@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "request": "launch",
+      "name": "Helpdesk Client (Java 25)",
+      "projectName": "helpdesk-client",
+      "mainClass": "com.ap.helpdesk/com.ap.helpdesk.App",
+      "javaExec": "C:/Users/Blitz/.jdk/jdk-25.0.5+8/bin/java.exe"
+    }
+  ]
+}

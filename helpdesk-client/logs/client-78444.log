@@ -1,0 +1,6 @@
+2026-11-18 22:28:56.741 INFO  App - Help desk client started
+2026-11-18 22:31:21.141 INFO  UserManager - Opened the ADMINISTRATOR dashboard for user 2
+2026-11-18 22:40:33.603 INFO  UserManager - Signed out of the help desk client
+2026-11-18 22:40:44.273 INFO  UserManager - Opened the ADMINISTRATOR dashboard for user 2
+2026-11-18 22:46:15.270 INFO  TicketManager - Saved ticket 3 with status ASSIGNED
+2026-11-18 22:51:03.200 INFO  TicketManager - Saved ticket 4 with status ASSIGNED

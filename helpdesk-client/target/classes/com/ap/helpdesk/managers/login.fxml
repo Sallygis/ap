@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Defines sign-in and the links to registration and demo accounts. -->
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox alignment="CENTER" spacing="16.0" xmlns:fx="http://javafx.com/fxml/1">
+    <padding>
+        <Insets top="24.0" right="24.0" bottom="24.0" left="24.0"/>
+    </padding>
+    <Label text="University Help Desk" style="-fx-font-size: 30px; -fx-font-weight: bold;"/>
+    <VBox spacing="8.0" maxWidth="340.0">
+        <Label text="Email"/>
+        <TextField fx:id="emailField" accessibleText="Email"/>
+        <Label text="Password"/>
+        <PasswordField fx:id="passwordField" accessibleText="Password"/>
+        <Button text="Sign in" onAction="#signIn" defaultButton="true" maxWidth="Infinity"/>
+        <Label fx:id="formMessage" wrapText="true"/>
+    </VBox>
+    <Hyperlink text="Create an account" onAction="#showRegistration"/>
+    <Button text="Try demo" onAction="#showDemo"/>
+</VBox>

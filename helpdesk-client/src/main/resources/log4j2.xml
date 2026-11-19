@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Writes regular and error logs and keeps five archives for each file. -->
+<Configuration>
+    <Properties>
+        <Property name="logDir">${sys:helpdesk.log.dir:-logs}</Property>
+        <Property name="logName">${sys:helpdesk.log.name:-client}</Property>
+        <Property name="linePattern">%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %c{1} - %enc{%msg}{CRLF}%n</Property>
+    </Properties>
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${linePattern}"/>
+        </Console>
+        <RollingFile name="Application" fileName="${logDir}/${logName}.log"
+                     filePattern="${logDir}/${logName}-%i.log.gz">
+            <PatternLayout pattern="${linePattern}"/>
+            <SizeBasedTriggeringPolicy size="1 MB"/>
+            <DefaultRolloverStrategy max="5"/>
+        </RollingFile>
+        <RollingFile name="Errors" fileName="${logDir}/${logName}-error.log"
+                     filePattern="${logDir}/${logName}-error-%i.log.gz">
+            <PatternLayout pattern="${linePattern}"/>
+            <SizeBasedTriggeringPolicy size="1 MB"/>
+            <DefaultRolloverStrategy max="5"/>
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="Application"/>
+            <AppenderRef ref="Errors" level="error"/>
+        </Root>
+    </Loggers>
+</Configuration>

@@ -1,0 +1,17 @@
+com\ap\helpdesk\managers\AccountClient$1.class
+com\ap\helpdesk\managers\UserManager.class
+com\ap\helpdesk\App.class
+com\ap\helpdesk\classes\Administrator.class
+module-info.class
+com\ap\helpdesk\managers\AccountClient.class
+com\ap\helpdesk\classes\Requester$Kind.class
+com\ap\helpdesk\managers\AccountClient$RequestFailure.class
+com\ap\helpdesk\managers\TicketManager$1.class
+com\ap\helpdesk\classes\Ticket$TicketStatus.class
+com\ap\helpdesk\classes\Requester.class
+com\ap\helpdesk\classes\User.class
+com\ap\helpdesk\classes\Technician.class
+com\ap\helpdesk\classes\User$Role.class
+com\ap\helpdesk\managers\TicketManager.class
+com\ap\helpdesk\managers\ManageAccountsDialog$1.class
+com\ap\helpdesk\classes\Ticket.class
