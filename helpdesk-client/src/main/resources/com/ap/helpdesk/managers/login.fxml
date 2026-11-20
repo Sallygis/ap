@@ -46,6 +46,8 @@
                     <PasswordField fx:id="passwordField" accessibleText="Password"
                                    prefHeight="42"
                                    style="-fx-base: #F3F1F8; -fx-background-radius: 7;"/>
+                                   
+                    <Hyperlink text="Forgot password?" onAction="#showRecovery" style="-fx-text-fill: #523584;"/>       
                 </VBox>
 
                 <Button text="Sign in" onAction="#signIn" defaultButton="true"
