@@ -64,6 +64,15 @@ public class SecurityConfig {
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/users/csrf").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/users", "/api/users/login").permitAll()
+                        
+                        .requestMatchers(HttpMethod.POST, "/api/users/recover-password")
+                        .access((authentication, context) -> {
+                            String address = context.getRequest().getRemoteAddr();
+                            boolean local = "127.0.0.1".equals(address)
+                                    || "::1".equals(address)
+                                    || "0:0:0:0:0:0:0:1".equals(address);
+                            return new AuthorizationDecision(local);
+                        })
                         .requestMatchers(HttpMethod.GET, "/api/users", "/api/technicians").access(administrator)
                         .requestMatchers(HttpMethod.PATCH, "/api/users/*/role", "/api/users/*/password").access(administrator)
                         .requestMatchers("/api/reports/**", "/api/tickets/*/assignment").access(administrator)
