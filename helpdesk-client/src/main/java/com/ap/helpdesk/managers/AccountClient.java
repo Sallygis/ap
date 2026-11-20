@@ -44,6 +44,15 @@ final class AccountClient {
         return post("/api/users/login", Map.of("email", email, "password", password))
                 .thenApply(this::readUser);
     }
+    
+    //Recover password with name, email and new password
+    CompletableFuture<Void> recoverPassword(String fullName, String email, String newPassword) {
+        return post("/api/users/recover-password", Map.of(
+                "fullName", fullName,
+                "email", email,
+                "newPassword", newPassword
+        )).thenAccept(body -> {});
+    }
 
     /** Creates a requester account and receives the new session. */
     CompletableFuture<User> register(String fullName, String email, String password, Requester.Kind kind) {
@@ -148,6 +157,10 @@ final class AccountClient {
                             ? "That account is no longer available."
                             : "The ticket or technician is no longer available.");
                 case 422:
+	                	if (request.uri().getPath().equals("/api/users/recover-password")) {
+	                	    throw new RequestFailure("The full name and email do not match an account.");
+	                	}
+	                	
                     throw new RequestFailure(request.uri().getPath().equals("/api/users/password")
                             ? "Current password is incorrect."
                             : "Check the information in the form and try again.");
