@@ -81,6 +81,17 @@ public class UserController {
         }
     }
 
+    @PostMapping("/recover-password")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void recoverPassword(@Valid @RequestBody RecoveryRequest change) {
+        accounts.recoverPassword(change.fullName(), change.email(), change.newPassword());
+    }
+
+    public record RecoveryRequest(
+            @NotBlank @Size(max = 120) String fullName,
+            @NotBlank @Email @Size(max = 254) String email,
+            @NotBlank @Size(min = 8, max = 256) String newPassword) {}
+
     /** Lists accounts for administrator use. */
     @GetMapping
     public List<Profile> listUsers() {

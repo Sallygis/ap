@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<StackPane xmlns:fx="http://javafx.com/fxml/1" style="-fx-padding: 28; -fx-background-color: #EDF0F8;">
+    <VBox spacing="10" maxWidth="360" maxHeight="-Infinity"
+          style="-fx-padding: 28; -fx-background-color: white; -fx-background-radius: 14;">
+        <Label text="Reset your password" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #382365;"/>
+        <Label text="Full name"/>
+        <TextField fx:id="fullNameField" accessibleText="Full name"/>
+        <Label text="Email"/>
+        <TextField fx:id="emailField" accessibleText="Email"/>
+        <Label text="New password"/>
+        <PasswordField fx:id="passwordField" accessibleText="New password" promptText="At least 8 characters"/>
+        <Button text="Reset password" onAction="#recoverPassword" defaultButton="true"
+                maxWidth="Infinity" style="-fx-base: #382365; -fx-text-fill: white;"/>
+        <Label fx:id="formMessage" wrapText="true" style="-fx-text-fill: #A22958;"/>
+        <Hyperlink text="Back to sign in" onAction="#showLogin"/>
+    </VBox>
+</StackPane>

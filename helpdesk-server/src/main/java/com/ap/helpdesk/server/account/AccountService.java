@@ -106,6 +106,15 @@ public class AccountService implements UserDetailsService {
         return account.getId();
     }
 
+    @Transactional
+    public void recoverPassword(String fullName, String email, String newPassword) {
+        UserAccount account = accounts.findByEmailForUpdate(normalizeEmail(email))
+                .filter(user -> user.getFullName().equalsIgnoreCase(fullName.strip()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                        "The full name and email do not match an account"));
+        account.changePasswordHash(passwords.encode(newPassword));
+    }
+
     /** Replaces another user's password immediately under administrator control. */
     @Transactional
     public long resetPassword(String administrator, long userId, String newPassword) {

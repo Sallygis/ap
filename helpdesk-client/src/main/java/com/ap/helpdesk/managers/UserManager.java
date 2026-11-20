@@ -77,6 +77,45 @@ public final class UserManager {
         requesterKindSelector = null;
     }
 
+    @FXML
+    private void showRecovery() {
+        String email = emailField.getText();
+        showScreen("recover.fxml");
+        emailField.setText(email);
+    }
+
+    @FXML
+    private void recoverPassword() {
+        String name = fullNameField.getText().strip();
+        if (name.isEmpty() || name.length() > 120) {
+            formMessage.setText("Enter the full name used at registration (up to 120 characters).");
+            return;
+        }
+        if (!validateCredentials()) {
+            return;
+        }
+        String password = passwordField.getText();
+        if (password.length() < 8) {
+            formMessage.setText("Use at least 8 characters for your new password.");
+            return;
+        }
+        String email = emailField.getText().strip();
+        Parent form = scene.getRoot();
+        form.setDisable(true);
+        formMessage.setText("Updating password…");
+        accounts.recoverPassword(name, email, password).whenComplete((ignored, failure) -> Platform.runLater(() -> {
+            form.setDisable(false);
+            if (failure != null) {
+                formMessage.setText(AccountClient.messageFor(failure));
+                return;
+            }
+            showLogin();
+            emailField.setText(email);
+            formMessage.setText("Password updated. Sign in with your new password.");
+            passwordField.requestFocus();
+        }));
+    }
+
     /** Opens public registration for students and staff. */
     @FXML
     private void showRegistration() {

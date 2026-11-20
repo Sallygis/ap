@@ -63,6 +63,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(routes -> routes
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/users/csrf").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/users/recover-password")
+                        .access((auth, context) -> new AuthorizationDecision(
+                                java.util.Set.of("127.0.0.1", "::1", "0:0:0:0:0:0:0:1")
+                                        .contains(context.getRequest().getRemoteAddr())))
                         .requestMatchers(HttpMethod.POST, "/api/users", "/api/users/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/users", "/api/technicians").access(administrator)
                         .requestMatchers(HttpMethod.PATCH, "/api/users/*/role", "/api/users/*/password").access(administrator)

@@ -48,6 +48,9 @@
                                    style="-fx-base: #F3F1F8; -fx-background-radius: 7;"/>
                 </VBox>
 
+                <Hyperlink text="Forgot password?" onAction="#showRecovery"
+                           style="-fx-text-fill: #523584;"/>
+
                 <Button text="Sign in" onAction="#signIn" defaultButton="true"
                         prefHeight="42" maxWidth="Infinity"
                         style="-fx-base: #382365; -fx-background-radius: 21;

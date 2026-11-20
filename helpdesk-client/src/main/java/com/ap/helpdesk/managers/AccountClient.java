@@ -52,6 +52,13 @@ final class AccountClient {
                 .thenApply(this::readUser);
     }
 
+    private static final String RECOVERY_PATH = "/api/users/recover-password";
+
+    CompletableFuture<Void> recoverPassword(String fullName, String email, String newPassword) {
+        return post(RECOVERY_PATH, Map.of("fullName", fullName, "email", email, "newPassword", newPassword))
+                .thenAccept(body -> {});
+    }
+
     /** Loads the users shown in the administrator's account editor. */
     CompletableFuture<List<User>> listUsers() {
         return get("/api/users").thenApply(body -> {
@@ -139,6 +146,9 @@ final class AccountClient {
                             ? "Invalid email or password."
                             : "Your session expired. Sign in again.");
                 case 403:
+                    if (RECOVERY_PATH.equals(request.uri().getPath())) {
+                        throw new RequestFailure("Open the help desk on the server computer to reset your password.");
+                    }
                     throw new RequestFailure("The server declined this request. Please try again.");
                 case 404:
                     if (request.uri().getPath().equals("/api/reports/tickets/details")) {
@@ -148,6 +158,9 @@ final class AccountClient {
                             ? "That account is no longer available."
                             : "The ticket or technician is no longer available.");
                 case 422:
+                    if (RECOVERY_PATH.equals(request.uri().getPath())) {
+                        throw new RequestFailure("The full name and email do not match an account.");
+                    }
                     throw new RequestFailure(request.uri().getPath().equals("/api/users/password")
                             ? "Current password is incorrect."
                             : "Check the information in the form and try again.");
