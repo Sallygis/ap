@@ -15,6 +15,7 @@ import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
@@ -28,6 +29,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
+
 
 /** Controls sign-in, registration, and dashboard navigation. */
 public final class UserManager {
@@ -125,6 +127,56 @@ public final class UserManager {
         }
     }
 
+    
+    @FXML
+    private void showRecovery() {
+        String email = emailField.getText();
+        showScreen("recover.fxml");
+        emailField.setText(email);
+    }
+
+    @FXML
+    private void recoverPassword() {
+        String name = fullNameField.getText().strip();
+
+        if (name.isEmpty() || name.length() > 120) {
+            formMessage.setText("Enter the full name used at registration.");
+            return;
+        }
+
+        if (!validateCredentials()) {
+            return;
+        }
+
+        String email = emailField.getText().strip();
+        String newPassword = passwordField.getText();
+
+        if (newPassword.length() < 8) {
+            formMessage.setText("Use at least 8 characters for your new password.");
+            return;
+        }
+
+        Parent form = scene.getRoot();
+        form.setDisable(true);
+        formMessage.setText("Updating password…");
+
+        accounts.recoverPassword(name, email, newPassword)
+                .whenComplete((ignored, failure) -> Platform.runLater(() -> {
+                    form.setDisable(false);
+
+                    if (failure != null) {
+                        formMessage.setText(AccountClient.messageFor(failure));
+                        return;
+                    }
+
+                    showLogin();
+                    emailField.setText(email);
+                    formMessage.setText("Password updated. Sign in with your new password.");
+                    passwordField.requestFocus();
+                }));
+    }
+    
+    
     /** Registers a student or staff account and opens its dashboard. */
     @FXML
     private void register() {
