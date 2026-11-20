@@ -1,27 +1,99 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Defines sign-in and the links to registration and demo accounts. -->
 
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Rectangle?>
 
-<VBox alignment="CENTER" spacing="16.0" xmlns:fx="http://javafx.com/fxml/1">
-    <padding>
-        <Insets top="24.0" right="24.0" bottom="24.0" left="24.0"/>
-    </padding>
-    <Label text="University Help Desk" style="-fx-font-size: 30px; -fx-font-weight: bold;"/>
-    <VBox spacing="8.0" maxWidth="340.0">
-        <Label text="Email"/>
-        <TextField fx:id="emailField" accessibleText="Email"/>
-        <Label text="Password"/>
-        <PasswordField fx:id="passwordField" accessibleText="Password"/>
-        <Button text="Sign in" onAction="#signIn" defaultButton="true" maxWidth="Infinity"/>
-        <Label fx:id="formMessage" wrapText="true"/>
-    </VBox>
-    <Hyperlink text="Create an account" onAction="#showRegistration"/>
-    <Button text="Try demo" onAction="#showDemo"/>
-</VBox>
+<StackPane xmlns:fx="http://javafx.com/fxml/1"
+           style="-fx-padding: 28;
+                  -fx-background-color: linear-gradient(to bottom right,
+                      #F8F9FD 0%, #EDF0F8 74%, #DCE5F7 100%);">
+
+    <HBox maxWidth="780" maxHeight="-Infinity"
+          style="-fx-effect: dropshadow(gaussian, #20234B33, 30, 0.12, 0, 10);">
+
+        <VBox alignment="CENTER_LEFT" spacing="18" prefWidth="345"
+              style="-fx-padding: 30;
+                     -fx-background-color: white;
+                     -fx-background-radius: 14 0 0 14;">
+
+            <VBox spacing="5">
+                <Label text="University Help Desk"
+                       style="-fx-text-fill: #605184; -fx-font-weight: bold;"/>
+                <Label text="Sign in"
+                       style="-fx-text-fill: #211B3A; -fx-font-size: 28px;
+                              -fx-font-weight: bold;"/>
+            </VBox>
+
+            <VBox spacing="12">
+                <VBox spacing="5">
+                    <Label text="Email"
+                           style="-fx-text-fill: #352D4D; -fx-font-weight: bold;"/>
+                    <TextField fx:id="emailField" accessibleText="Email"
+                               promptText="you@example.com" prefHeight="42"
+                               style="-fx-base: #F3F1F8; -fx-background-radius: 7;"/>
+                </VBox>
+
+                <VBox spacing="5">
+                    <Label text="Password"
+                           style="-fx-text-fill: #352D4D; -fx-font-weight: bold;"/>
+                    <PasswordField fx:id="passwordField" accessibleText="Password"
+                                   prefHeight="42"
+                                   style="-fx-base: #F3F1F8; -fx-background-radius: 7;"/>
+                </VBox>
+
+                <Button text="Sign in" onAction="#signIn" defaultButton="true"
+                        prefHeight="42" maxWidth="Infinity"
+                        style="-fx-base: #382365; -fx-background-radius: 21;
+                               -fx-text-fill: white; -fx-font-weight: bold;
+                               -fx-cursor: hand;"/>
+
+                <Label fx:id="formMessage" wrapText="true" maxWidth="Infinity"
+                       style="-fx-text-fill: #A22958;"/>
+            </VBox>
+
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <Hyperlink text="Create an account" onAction="#showRegistration"
+                           style="-fx-text-fill: #523584;"/>
+                <Button text="Try demo" onAction="#showDemo"
+                        style="-fx-base: #EDE7F7; -fx-background-radius: 14;
+                               -fx-text-fill: #382365; -fx-cursor: hand;"/>
+            </HBox>
+        </VBox>
+
+        <StackPane prefWidth="435" HBox.hgrow="ALWAYS"
+                   style="-fx-background-color: linear-gradient(to bottom right,
+                              #AD367F 0%, #38226D 24%, #201842 68%, #106183 100%);
+                          -fx-background-radius: 0 14 14 0;">
+
+            <Rectangle width="112" height="9" arcWidth="9" arcHeight="9"
+                       fill="#CA4399" opacity="0.80" rotate="-38"
+                       translateX="88" translateY="-120" mouseTransparent="true"/>
+
+            <Rectangle width="98" height="15" arcWidth="15" arcHeight="15"
+                       fill="#42B0DC" opacity="0.66" rotate="-38"
+                       translateX="102" translateY="117" mouseTransparent="true"/>
+
+            <Rectangle width="85" height="3" arcWidth="3" arcHeight="3"
+                       fill="#EE66BD" opacity="0.85" rotate="-38"
+                       translateX="-73" translateY="108" mouseTransparent="true"/>
+
+            <VBox alignment="CENTER_LEFT" spacing="10"
+                  style="-fx-padding: 32;">
+                <Label text="Welcome to the&#10;University Help Desk"
+                       wrapText="true"
+                       style="-fx-text-fill: white; -fx-font-size: 29px;
+                              -fx-font-weight: bold;"/>
+                <Label text="Submit and track your support tickets."
+                       wrapText="true"
+                       style="-fx-text-fill: #E7DBF9; -fx-font-size: 14px;"/>
+            </VBox>
+        </StackPane>
+    </HBox>
+</StackPane>
