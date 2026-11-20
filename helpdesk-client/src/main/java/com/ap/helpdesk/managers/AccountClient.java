@@ -27,7 +27,7 @@ import java.util.concurrent.CompletionException;
 /** Sends REST requests and shares the signed-in session across accounts, tickets, and reports. */
 final class AccountClient {
     private static final Logger LOG = LogManager.getLogger(AccountClient.class);
-    private final URI server = URI.create(System.getProperty("helpdesk.server.url", "http://127.0.0.1:8081"));
+    private final URI server = URI.create(System.getProperty("helpdesk.server.url", "http://127.0.0.1:8080"));
     private final CookieManager cookies = new CookieManager();
     private final HttpClient http = HttpClient.newBuilder()
             .cookieHandler(cookies)
