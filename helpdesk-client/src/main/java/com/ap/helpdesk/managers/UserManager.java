@@ -13,6 +13,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextInputDialog;
@@ -46,16 +47,20 @@ public final class UserManager {
     @FXML
     private PasswordField passwordField;
     @FXML
+    private PasswordField adminSetupCodeField;
+    @FXML
     private Label formMessage;
     @FXML
     private TextField fullNameField;
     @FXML
-    private ComboBox<String> requesterKindSelector;
+    private ComboBox<String> roleSelector;
+    @FXML
+    private CheckBox technicianLogin;
 
     public UserManager(Scene scene) {
         this.scene = scene;
-        Requester student = new Requester(1, "Demo Student", "student@example.com", Requester.Kind.STUDENT);
-        Requester staff = new Requester(2, "Demo Staff", "staff@example.com", Requester.Kind.STAFF);
+        Requester student = new Requester(1, "Demo Student", "student@example.com", User.Role.STUDENT);
+        Requester staff = new Requester(2, "Demo Staff", "staff@example.com", User.Role.STAFF);
         Technician technician = new Technician(3, "Demo Technician", "technician@example.com");
 
         // Demo accounts are local examples and have no server session.
@@ -76,14 +81,28 @@ public final class UserManager {
             stage.setTitle(App.WINDOW_TITLE);
         }
         fullNameField = null;
-        requesterKindSelector = null;
+        roleSelector = null;
     }
 
     /** Opens public registration for students and staff. */
     @FXML
     private void showRegistration() {
         showScreen("register.fxml");
-        requesterKindSelector.getItems().setAll("Student", "Staff");
+
+        roleSelector.getItems().setAll("Student", "Staff", "Technician", "Administrator");
+
+        roleSelector.valueProperty().addListener((observable, previous, selected) -> {
+            boolean needsCode = "Technician".equals(selected)
+                    || "Administrator".equals(selected);
+
+            adminSetupCodeField.clear();
+            adminSetupCodeField.setVisible(needsCode);
+            adminSetupCodeField.setManaged(needsCode);
+
+            if (needsCode) {
+                adminSetupCodeField.setPromptText(selected + " setup code");
+            }
+        });
     }
 
     /** Loads a form and connects its controls to this manager. */
@@ -122,9 +141,18 @@ public final class UserManager {
     /** Submits credentials to the server after checking the form. */
     @FXML
     private void signIn() {
-        if (validateCredentials()) {
-            openAccount(accounts.signIn(emailField.getText().strip(), passwordField.getText()), "Signing in…");
+        if (!validateCredentials()) {
+            return;
         }
+
+        openAccount(
+                accounts.signIn(
+                        emailField.getText().strip(),
+                        passwordField.getText(),
+                        technicianLogin.isSelected()
+                ),
+                "Signing in…"
+        );
     }
 
     
@@ -193,16 +221,33 @@ public final class UserManager {
             formMessage.setText("Use at least 8 characters for your password.");
             return;
         }
-        String selectedKind = requesterKindSelector.getValue();
-        if (selectedKind == null) {
-            formMessage.setText("Select Student or Staff.");
+        
+        String selectedRole = roleSelector.getValue();
+
+        if (selectedRole == null) {
+            formMessage.setText("Select an account role.");
             return;
         }
 
-        Requester.Kind kind = Requester.Kind.valueOf(selectedKind.toUpperCase(Locale.ROOT));
-        openAccount(accounts.register(name, emailField.getText().strip(), password, kind), "Creating account…");
-    }
+        User.Role role = User.Role.valueOf(selectedRole.toUpperCase(Locale.ROOT));
+        String setupCode = "";
 
+        if (role == User.Role.TECHNICIAN || role == User.Role.ADMINISTRATOR) {
+            setupCode = adminSetupCodeField.getText();
+
+            if (setupCode.isBlank()) {
+                formMessage.setText("Enter the " + selectedRole + " setup code.");
+                return;
+            }
+        }
+
+        openAccount(
+                accounts.registerWithRole(
+                        name, emailField.getText().strip(), password, role, setupCode),
+                "Creating account…"
+        );
+    }
+    
     /** Keeps the form responsive while the HTTP request is running. */
     private void openAccount(CompletableFuture<User> result, String pendingMessage) {
         Parent form = scene.getRoot();
