@@ -14,12 +14,7 @@ import jakarta.persistence.Table;
 @Table(name = "users")
 public class UserAccount {
     public enum Role {
-        REQUESTER, TECHNICIAN, ADMINISTRATOR
-    }
-
-    /** Students and staff use the same requester role. */
-    public enum RequesterKind {
-        STUDENT, STAFF
+        STUDENT, STAFF, TECHNICIAN, ADMINISTRATOR
     }
 
     @Id
@@ -39,24 +34,17 @@ public class UserAccount {
     @Column(nullable = false)
     private Role role;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "requester_kind")
-    private RequesterKind requesterKind;
-
     protected UserAccount() {}
 
-    UserAccount(String fullName, String email, String passwordHash, RequesterKind requesterKind) {
+    UserAccount(String fullName, String email, String passwordHash, Role role) {
         this.fullName = fullName;
         this.email = email;
         this.passwordHash = passwordHash;
-        this.role = Role.REQUESTER;
-        this.requesterKind = requesterKind;
+        this.role = role;
     }
 
-    /** Updates the role and keeps the requester category in sync. */
-    void changeRole(Role role, RequesterKind requesterKind) {
+    void changeRole(Role role) {
         this.role = role;
-        this.requesterKind = requesterKind;
     }
 
     Long getId() {
@@ -83,7 +71,4 @@ public class UserAccount {
         return role;
     }
 
-    RequesterKind getRequesterKind() {
-        return requesterKind;
-    }
 }
