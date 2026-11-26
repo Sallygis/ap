@@ -9,6 +9,7 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Rectangle?>
+<?import javafx.scene.control.CheckBox?>
 
 <StackPane xmlns:fx="http://javafx.com/fxml/1"
            style="-fx-padding: 28;
@@ -49,7 +50,10 @@
                                    
                     <Hyperlink text="Forgot password?" onAction="#showRecovery" style="-fx-text-fill: #523584;"/>       
                 </VBox>
-
+				
+				<CheckBox fx:id="technicianLogin"
+          			text="Sign in as Technician"/>
+				
                 <Button text="Sign in" onAction="#signIn" defaultButton="true"
                         prefHeight="42" maxWidth="Infinity"
                         style="-fx-base: #382365; -fx-background-radius: 21;
