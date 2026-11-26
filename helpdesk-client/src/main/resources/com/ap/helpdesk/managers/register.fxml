@@ -61,12 +61,16 @@
                 <VBox spacing="4">
                     <Label text="Account type"
                            style="-fx-text-fill: #352D4D; -fx-font-weight: bold;"/>
-                    <ComboBox fx:id="requesterKindSelector"
-                              promptText="Select Student or Staff"
+                    <ComboBox fx:id="roleSelector"
+                              promptText="Select Account Type"
                               accessibleText="Account type"
                               prefHeight="38" maxWidth="Infinity"
                               style="-fx-base: #F3F1F8; -fx-background-radius: 7;"/>
                 </VBox>
+				<PasswordField fx:id="adminSetupCodeField" promptText="Setup code"
+	               accessibleText="Setup code" visible="false" managed="false"
+	               prefHeight="38" maxWidth="Infinity"/>
+
 
                 <Button text="Register" onAction="#register" defaultButton="true"
                         prefHeight="42" maxWidth="Infinity"
