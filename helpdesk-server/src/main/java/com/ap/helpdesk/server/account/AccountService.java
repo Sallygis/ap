@@ -3,7 +3,6 @@ package com.ap.helpdesk.server.account;
 import java.util.List;
 import java.util.Locale;
 
-import com.ap.helpdesk.server.account.UserAccount.RequesterKind;
 import com.ap.helpdesk.server.account.UserAccount.Role;
 import com.ap.helpdesk.server.exception.UserNotFoundException;
 import com.ap.helpdesk.server.ticket.TicketRepository;
@@ -18,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.beans.factory.annotation.Value;
 
 /** Registers users, provides account details, and manages roles and passwords. */
 @Service
@@ -26,26 +26,64 @@ public class AccountService implements UserDetailsService {
     private final PasswordEncoder passwords;
     private final TechnicianRepository technicians;
     private final TicketRepository tickets;
+    private final String adminSetupCode;
+    private final String technicianSetupCode;
 
     public AccountService(UserAccountRepository accounts, PasswordEncoder passwords,
-            TechnicianRepository technicians, TicketRepository tickets) {
+            TechnicianRepository technicians, TicketRepository tickets,
+            @Value("${HELPDESK_ADMIN_SETUP_CODE:}") String adminSetupCode,
+            @Value("${HELPDESK_TECHNICIAN_SETUP_CODE:}") String technicianSetupCode) {
         this.accounts = accounts;
         this.passwords = passwords;
         this.technicians = technicians;
         this.tickets = tickets;
+        this.adminSetupCode = adminSetupCode;
+        this.technicianSetupCode = technicianSetupCode;
     }
 
-    /** Saves a requester and returns the information the client needs. */
-    public Profile register(String fullName, String email, String password, RequesterKind kind) {
-        UserAccount account = new UserAccount(fullName.strip(), normalizeEmail(email), passwords.encode(password), kind);
-        try {
-            return profileOf(accounts.saveAndFlush(account));
-        } catch (DataIntegrityViolationException exception) {
-            // The database's unique email constraint also covers simultaneous sign-ups.
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "That email is already registered", exception);
+    /** Saves a USER and returns the information the client needs. */
+    @Transactional
+    public Profile register(String fullName, String email, String password,
+            Role role, String setupCode) {
+
+        if (role == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Select an account role");
         }
-    }
 
+        if (role == Role.TECHNICIAN || role == Role.ADMINISTRATOR) {
+            String expectedCode = role == Role.TECHNICIAN
+                    ? technicianSetupCode
+                    : adminSetupCode;
+
+            if (expectedCode.isBlank() || !expectedCode.equals(setupCode)) {
+                throw new ResponseStatusException(
+                        HttpStatus.FORBIDDEN, "Invalid setup code for this role");
+            }
+        }
+
+        UserAccount account = new UserAccount(
+                fullName.strip(),
+                normalizeEmail(email),
+                passwords.encode(password),
+                role
+        );
+
+        try {
+            accounts.saveAndFlush(account);
+        } catch (DataIntegrityViolationException exception) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "That email is already registered", exception);
+        }
+
+        if (role == Role.TECHNICIAN) {
+            technicians.save(new Technician(account));
+        }
+
+        return profileOf(account);
+    }
+    
+    
     /** Lets Spring Security check the supplied password against the saved hash. */
     @Override
     public UserDetails loadUserByUsername(String email) {
@@ -75,24 +113,30 @@ public class AccountService implements UserDetailsService {
 
     /** Saves the role and its Technician entry in the same transaction. */
     @Transactional
-    public Profile changeRole(String administrator, long userId, Role role, RequesterKind kind) {
-        if ((role == Role.REQUESTER) != (kind != null)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose Student or Staff for a requester");
+    public Profile changeRole(String administrator, long userId, Role role) {
+        if (role == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Select an account role");
         }
 
         UserAccount account = lockManagedAccount(administrator, userId).target();
 
-        if (account.getRole() == Role.TECHNICIAN && role != Role.TECHNICIAN
+        if (account.getRole() == Role.TECHNICIAN
+                && role != Role.TECHNICIAN
                 && !tickets.findActiveTechnicianAssignments(userId).isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "This technician still has active assignments");
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "This technician still has active assignments");
         }
-        account.changeRole(role, kind);
-        // Keep existing Technician entries because past ticket assignments still refer to them.
+
+        account.changeRole(role);
+
         if (role == Role.TECHNICIAN && !technicians.existsById(userId)) {
             technicians.save(new Technician(account));
         }
+
         return profileOf(account);
     }
+    
 
     /** Changes a signed-in user's password after verifying their current one. */
     @Transactional
@@ -147,8 +191,8 @@ public class AccountService implements UserDetailsService {
     }
 
     private static Profile profileOf(UserAccount account) {
-        return new Profile(account.getId(), account.getFullName(), account.getEmail(),
-                account.getRole(), account.getRequesterKind());
+    		return new Profile(account.getId(), account.getFullName(),
+    	        account.getEmail(), account.getRole());
     }
 
     private static String normalizeEmail(String email) {
@@ -156,5 +200,5 @@ public class AccountService implements UserDetailsService {
     }
 
     /** Account fields that may be returned to the client. */
-    public record Profile(long userId, String fullName, String email, Role role, RequesterKind requesterKind) {}
+    public record Profile(long userId, String fullName, String email, Role role) {}
 }
