@@ -1,26 +1,21 @@
 package com.ap.helpdesk.classes;
 
-/** A student or staff member who can submit and track their own tickets. */
 public final class Requester extends User {
-    /** Student and staff accounts share the same requester permissions. */
-    public enum Kind {
-        STUDENT,
-        STAFF
-    }
+    private final Role role;
 
-    private final Kind kind;
-
-    public Requester(long userId, String fullName, String email, Kind kind) {
+    public Requester(long userId, String fullName, String email, Role role) {
         super(userId, fullName, email);
-        this.kind = kind;
+
+        if (role != Role.STUDENT && role != Role.STAFF) {
+            throw new IllegalArgumentException(
+                    "A requester must be a student or staff member");
+        }
+
+        this.role = role;
     }
 
     @Override
     public Role getRole() {
-        return Role.REQUESTER;
-    }
-
-    public Kind getKind() {
-        return kind;
+        return role;
     }
 }
