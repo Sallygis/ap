@@ -40,9 +40,20 @@ final class AccountClient {
     }
 
     /** Checks credentials and reads the authenticated profile from the server. */
-    CompletableFuture<User> signIn(String email, String password) {
-        return post("/api/users/login", Map.of("email", email, "password", password))
-                .thenApply(this::readUser);
+    CompletableFuture<User> signIn(String email, String password, boolean technicianLogin) {
+        Map<String, String> credentials;
+
+        if (technicianLogin) {
+            credentials = Map.of(
+                    "email", email,
+                    "password", password,
+                    "requiredRole", "TECHNICIAN"
+            );
+        } else {
+            credentials = Map.of("email", email, "password", password);
+        }
+
+        return post("/api/users/login", credentials).thenApply(this::readUser);
     }
     
     //Recover password with name, email and new password
@@ -55,12 +66,18 @@ final class AccountClient {
     }
 
     /** Creates a requester account and receives the new session. */
-    CompletableFuture<User> register(String fullName, String email, String password, Requester.Kind kind) {
-        return post("/api/users", Map.of("fullName", fullName, "email", email, "password", password,
-                "requesterKind", kind.name()))
-                .thenApply(this::readUser);
-    }
+    CompletableFuture<User> registerWithRole(String fullName, String email,
+            String password, User.Role role, String setupCode) {
 
+        return post("/api/users", Map.of(
+                "fullName", fullName,
+                "email", email,
+                "password", password,
+                "role", role.name(),
+                "setupCode", setupCode == null ? "" : setupCode
+        )).thenApply(this::readUser);
+    }
+    
     /** Loads the users shown in the administrator's account editor. */
     CompletableFuture<List<User>> listUsers() {
         return get("/api/users").thenApply(body -> {
@@ -73,10 +90,10 @@ final class AccountClient {
     }
 
     /** Saves the selected role using the administrator's session. */
-    CompletableFuture<User> changeRole(long userId, User.Role role, Requester.Kind kind) {
-        Map<String, String> data = kind == null ? Map.of("role", role.name())
-                : Map.of("role", role.name(), "requesterKind", kind.name());
-        return write("PATCH", "/api/users/" + userId + "/role", data).thenApply(this::readUser);
+    CompletableFuture<User> changeRole(long userId, User.Role role) {
+        return write("PATCH", "/api/users/" + userId + "/role",
+                Map.of("role", role.name()))
+                .thenApply(this::readUser);
     }
 
     /** Changes the signed-in user's password. */
@@ -148,6 +165,14 @@ final class AccountClient {
                             ? "Invalid email or password."
                             : "Your session expired. Sign in again.");
                 case 403:
+	                	if (request.uri().getPath().equals("/api/users/login")) {
+	                	    throw new RequestFailure("This account cannot sign in as a technician.");
+	                	}
+	                	if (request.uri().getPath().equals("/api/users")
+	                	        && request.method().equals("POST")) {
+	                	    throw new RequestFailure("Check the setup code for the selected account type.");
+	                	}
+	                	
                     throw new RequestFailure("The server declined this request. Please try again.");
                 case 404:
                     if (request.uri().getPath().equals("/api/reports/tickets/details")) {
@@ -218,18 +243,13 @@ final class AccountClient {
         long id = account.get("userId").getAsLong();
         String name = account.get("fullName").getAsString();
         String email = account.get("email").getAsString();
+        User.Role role = User.Role.valueOf(account.get("role").getAsString());
 
-        switch (User.Role.valueOf(account.get("role").getAsString())) {
-            case REQUESTER:
-                return new Requester(id, name, email,
-                        Requester.Kind.valueOf(account.get("requesterKind").getAsString()));
-            case TECHNICIAN:
-                return new Technician(id, name, email);
-            case ADMINISTRATOR:
-                return new Administrator(id, name, email);
-            default:
-                throw new RequestFailure("The server returned an unknown account role.");
-        }
+        return switch (role) {
+            case STUDENT, STAFF -> new Requester(id, name, email, role);
+            case TECHNICIAN -> new Technician(id, name, email);
+            case ADMINISTRATOR -> new Administrator(id, name, email);
+        };
     }
 
     /** Converts request failures into messages that the forms and dialogs can display. */
