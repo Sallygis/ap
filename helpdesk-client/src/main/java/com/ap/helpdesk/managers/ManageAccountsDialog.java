@@ -65,7 +65,7 @@ final class ManageAccountsDialog {
         dialog.getDialogPane().lookupButton(reset).disableProperty().bind(cannotEdit);
         dialog.setResultConverter(button -> {
             if (button == save) {
-                return new RoleChange(selected.get().getId(), choices.getValue().role, choices.getValue().kind);
+            	return new RoleChange(selected.get().getId(), choices.getValue().role);
             }
             return button == reset ? new PasswordReset(selected.get()) : null;
         });
@@ -73,33 +73,27 @@ final class ManageAccountsDialog {
     }
 
     private static Choice currentRole(User user) {
-        return switch (user.getRole()) {
-            case REQUESTER -> ((Requester) user).getKind() == Requester.Kind.STUDENT ? Choice.STUDENT : Choice.STAFF;
-            case TECHNICIAN -> Choice.TECHNICIAN;
-            case ADMINISTRATOR -> Choice.ADMINISTRATOR;
-        };
+        return Choice.valueOf(user.getRole().name());
     }
 
     sealed interface AccountAction permits RoleChange, PasswordReset {}
 
-    record RoleChange(long userId, User.Role role, Requester.Kind kind) implements AccountAction {}
-
+    record RoleChange(long userId, User.Role role) implements AccountAction {}
+    
     record PasswordReset(User account) implements AccountAction {}
 
     private enum Choice {
-        STUDENT("Student", User.Role.REQUESTER, Requester.Kind.STUDENT),
-        STAFF("Staff", User.Role.REQUESTER, Requester.Kind.STAFF),
-        TECHNICIAN("Technician", User.Role.TECHNICIAN, null),
-        ADMINISTRATOR("Administrator", User.Role.ADMINISTRATOR, null);
+        STUDENT("Student", User.Role.STUDENT),
+        STAFF("Staff", User.Role.STAFF),
+        TECHNICIAN("Technician", User.Role.TECHNICIAN),
+        ADMINISTRATOR("Administrator", User.Role.ADMINISTRATOR);
 
         private final String label;
         private final User.Role role;
-        private final Requester.Kind kind;
 
-        Choice(String label, User.Role role, Requester.Kind kind) {
+        Choice(String label, User.Role role) {
             this.label = label;
             this.role = role;
-            this.kind = kind;
         }
 
         @Override
