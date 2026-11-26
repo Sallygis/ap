@@ -45,21 +45,23 @@ final class NotificationClient {
                 try (Socket socket = new Socket()) {
                     socket.connect(new InetSocketAddress(session.serverHost(), grant.get("port").getAsInt()), 2000);
                     socket.setSoTimeout(15000);
-                    var input = new DataInputStream(socket.getInputStream());
-                    new DataOutputStream(socket.getOutputStream()).writeUTF(grant.get("token").getAsString());
-                    if (!input.readUTF().equals("READY")) {
-                        throw new IOException("Notification subscription was rejected");
-                    }
-                    if (warned) {
-                        LOG.info("Ticket notification connection restored");
-                    }
-                    warned = false;
-                    // Refresh after reconnecting because ticket changes may have arrived in the meantime.
-                    onUpdate.accept("REFRESH");
-                    while (true) {
-                        String message = input.readUTF();
-                        if (!message.isEmpty()) {
-                            onUpdate.accept(message);
+                    try (DataInputStream input = new DataInputStream(socket.getInputStream());
+                         DataOutputStream output = new DataOutputStream(socket.getOutputStream())) {
+                        output.writeUTF(grant.get("token").getAsString());
+                        if (!input.readUTF().equals("READY")) {
+                            throw new IOException("Notification subscription was rejected");
+                        }
+                        if (warned) {
+                            LOG.info("Ticket notification connection restored");
+                        }
+                        warned = false;
+                        // Refresh after reconnecting because ticket changes may have arrived in the meantime.
+                        onUpdate.accept("REFRESH");
+                        while (true) {
+                            String message = input.readUTF();
+                            if (!message.isEmpty()) {
+                                onUpdate.accept(message);
+                            }
                         }
                     }
                 }
