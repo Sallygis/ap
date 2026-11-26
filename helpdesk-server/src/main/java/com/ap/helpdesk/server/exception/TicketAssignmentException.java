@@ -5,7 +5,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 /** Reports why a ticket assignment could not be saved. */
 public final class TicketAssignmentException extends ResponseStatusException {
-    public TicketAssignmentException(HttpStatus status, String reason) {
+    private static final long serialVersionUID = 1L;
+
+	public TicketAssignmentException(HttpStatus status, String reason) {
         super(status, reason);
     }
 }
