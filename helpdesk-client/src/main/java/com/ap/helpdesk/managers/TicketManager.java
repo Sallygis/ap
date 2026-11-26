@@ -152,7 +152,8 @@ public final class TicketManager {
         accountRole.setText(switch (user.getRole()) {
             case ADMINISTRATOR -> "Administrator";
             case TECHNICIAN -> "Technician";
-            case REQUESTER -> ((Requester) user).getKind() == Requester.Kind.STUDENT ? "Student" : "Staff";
+            case STUDENT -> "Student";
+            case STAFF -> "Staff";
         });
         notificationMessage.visibleProperty().bind(Bindings.isNotEmpty(notificationMessage.textProperty()));
         notificationMessage.managedProperty().bind(notificationMessage.visibleProperty());
@@ -162,7 +163,7 @@ public final class TicketManager {
         statusColumn.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getStatus()));
 
         switch (user.getRole()) {
-            case REQUESTER -> {
+            case STUDENT, STAFF -> {
                 dashboardTitle.setText("My tickets");
                 ticketAction.setText("New ticket");
             }
@@ -190,7 +191,7 @@ public final class TicketManager {
 
         var noSelection = ticketTable.getSelectionModel().selectedItemProperty().isNull();
         openTicketButton.disableProperty().bind(noSelection);
-        if (user.getRole() != User.Role.REQUESTER) {
+        if (!(user instanceof Requester)) {
             ticketAction.disableProperty().bind(noSelection);
         }
         searchField.textProperty().addListener((field, oldText, newText) -> applySearch());
@@ -265,7 +266,7 @@ public final class TicketManager {
 
     private boolean canViewDemoTicket(Ticket ticket) {
         return switch (user.getRole()) {
-            case REQUESTER -> ticket.getRequesterId() == user.getId();
+            case STUDENT, STAFF -> ticket.getRequesterId() == user.getId();
             case TECHNICIAN -> Long.valueOf(user.getId()).equals(ticket.getAssignedTechnicianId());
             case ADMINISTRATOR -> true;
         };
@@ -275,7 +276,7 @@ public final class TicketManager {
     @FXML
     private void handleTicketAction() {
         switch (user.getRole()) {
-            case REQUESTER -> showTicketForm(null);
+            case STUDENT, STAFF -> showTicketForm(null);
             case TECHNICIAN -> updateSelectedStatus();
             case ADMINISTRATOR -> assignSelectedTicket();
         }
@@ -330,7 +331,7 @@ public final class TicketManager {
         ButtonType changeStatus = new ButtonType(reopen ? "Reopen ticket" : "Close ticket");
         if (!demoMode) {
             dialog.getDialogPane().getButtonTypes().add(comment);
-            if (user.getRole() == User.Role.REQUESTER) {
+            if (user instanceof Requester) {
                 dialog.getDialogPane().getButtonTypes().add(changeStatus);
             }
         }
@@ -362,7 +363,7 @@ public final class TicketManager {
 
     /** Shows the edit action only for the owner of a new ticket. */
     private boolean canEditDetails(Ticket ticket) {
-        return user.getRole() == User.Role.REQUESTER && ticket.getRequesterId() == user.getId()
+        return user instanceof Requester && ticket.getRequesterId() == user.getId()
                 && ticket.getStatus() == TicketStatus.NEW;
     }
 
@@ -577,7 +578,7 @@ public final class TicketManager {
                 .ifPresent(action -> {
                     switch (action) {
                         case ManageAccountsDialog.RoleChange change ->
-                            runRequest(accounts.changeRole(change.userId(), change.role(), change.kind()),
+                            runRequest(accounts.changeRole(change.userId(), change.role()),
                                     saved -> showAlert(Alert.AlertType.INFORMATION,
                                             "Account role saved for " + saved.getFullName() + "."));
                         case ManageAccountsDialog.PasswordReset reset -> resetPassword(reset.account());
