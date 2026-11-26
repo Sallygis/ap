@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.ap.helpdesk.server.account.AccountService;
 import com.ap.helpdesk.server.account.AccountService.Profile;
-import com.ap.helpdesk.server.account.UserAccount.RequesterKind;
 import com.ap.helpdesk.server.account.UserAccount.Role;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -61,9 +60,15 @@ public class UserController {
     @ResponseStatus(HttpStatus.CREATED)
     public Profile register(@Valid @RequestBody RegisterRequest account,
             HttpServletRequest request, HttpServletResponse response) {
-        Profile profile = accounts.register(account.fullName(), account.email(), account.password(),
-                account.requesterKind());
-        LOG.info("Account created for user {} ({})", profile.userId(), profile.requesterKind());
+    		Profile profile = accounts.register(
+    	        account.fullName(),
+    	        account.email(),
+    	        account.password(),
+    	        account.role(),
+    	        account.setupCode()
+    	);
+
+    	LOG.info("Account created for user {} with role {}", profile.userId(), profile.role());
         return startSession(profile, request, response);
     }
 
@@ -74,13 +79,38 @@ public class UserController {
         try {
             var token = UsernamePasswordAuthenticationToken.unauthenticated(credentials.email(), credentials.password());
             var verified = authentication.authenticate(token);
-            return startSession(accounts.getProfile(verified.getName()), request, response);
+            Profile profile = accounts.getProfile(verified.getName());
+
+            if (credentials.requiredRole() != null
+                    && credentials.requiredRole() != profile.role()) {
+                throw new ResponseStatusException(
+                        HttpStatus.FORBIDDEN, "This account does not have the selected role");
+            }
+
+            return startSession(profile, request, response);
+            
         } catch (AuthenticationException exception) {
             LOG.warn("Invalid login attempt");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
         }
     }
 
+    @PostMapping("/recover-password")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void recoverPassword(@Valid @RequestBody RecoveryRequest request) {
+        accounts.recoverPassword(
+                request.fullName(),
+                request.email(),
+                request.newPassword()
+        );
+    }
+
+    public record RecoveryRequest(
+            @NotBlank @Size(max = 120) String fullName,
+            @NotBlank @Email @Size(max = 254) String email,
+            @NotBlank @Size(min = 8, max = 256) String newPassword
+    ) {}
+    
     /** Lists accounts for administrator use. */
     @GetMapping
     public List<Profile> listUsers() {
@@ -90,7 +120,7 @@ public class UserController {
     /** Updates another user's role from the administrator's account editor. */
     @PatchMapping("/{id}/role")
     public Profile changeRole(@PathVariable long id, @Valid @RequestBody RoleRequest change, Principal administrator) {
-        return accounts.changeRole(administrator.getName(), id, change.role(), change.requesterKind());
+    		return accounts.changeRole(administrator.getName(), id, change.role());
     }
 
     /** Changes the authenticated user's own password. */
@@ -131,10 +161,11 @@ public class UserController {
             @NotBlank @Size(max = 120) String fullName,
             @NotBlank @Email @Size(max = 254) String email,
             @NotBlank @Size(min = 8, max = 256) String password,
-            @NotNull RequesterKind requesterKind) {}
+            @NotNull Role role,
+            @Size(max = 256) String setupCode) {}
 
-    public record RoleRequest(@NotNull Role role, RequesterKind requesterKind) {}
-
+    public record RoleRequest(@NotNull Role role) {}
+    
     public record ChangePasswordRequest(
             @NotBlank @Size(max = 256) String currentPassword,
             @NotBlank @Size(min = 8, max = 256) String newPassword) {}
@@ -143,5 +174,6 @@ public class UserController {
 
     public record LoginRequest(
             @NotBlank @Email @Size(max = 254) String email,
-            @NotBlank @Size(max = 256) String password) {}
+            @NotBlank @Size(max = 256) String password,
+            Role requiredRole) {}
 }
