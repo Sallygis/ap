@@ -10,9 +10,11 @@ import javax.crypto.spec.SecretKeySpec;
 
 /** Signs messages exchanged between Spring Boot and the notification server. */
 final class NotificationToken {
-    private static final Base64.Encoder ENCODER = Base64.getUrlEncoder().withoutPadding();
+	static final String SHARED_SECRET = "Notification_Key";
+	private static final Base64.Encoder ENCODER = Base64.getUrlEncoder().withoutPadding();
     private static final Base64.Decoder DECODER = Base64.getUrlDecoder();
     private final SecretKeySpec key;
+    
 
     NotificationToken(String secret) {
         key = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
