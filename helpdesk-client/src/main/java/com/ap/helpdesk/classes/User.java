@@ -4,7 +4,8 @@ package com.ap.helpdesk.classes;
 public abstract class User {
     /** The role controls which dashboard and actions the client shows. */
     public enum Role {
-        REQUESTER,
+        STUDENT,
+        STAFF,
         TECHNICIAN,
         ADMINISTRATOR
     }
