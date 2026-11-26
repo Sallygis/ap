@@ -48,6 +48,10 @@ public class TicketService {
         this.events = events;
     }
 
+    private static boolean canSubmitTickets(Profile actor) {
+        return actor.role() == Role.STUDENT || actor.role() == Role.STAFF;
+    }
+    
     /** Returns the signed-in user's visible tickets in newest-first order. */
     @Transactional(readOnly = true)
     public List<TicketView> listTickets(String email, TicketFilters filters) {
@@ -81,7 +85,10 @@ public class TicketService {
     @Transactional
     public TicketView createTicket(String email, String subject, String description, String priority) {
         Profile actor = signedInAccount(email);
-        requireRole(actor, Role.REQUESTER);
+        if (!canSubmitTickets(actor)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Student or staff access required");
+        }
         // The server supplies the owner and creation time.
         var ticket = new Ticket(actor.userId(), subject.strip(), description.strip(), priority.strip(), now());
         Ticket saved = tickets.save(ticket);
@@ -93,7 +100,10 @@ public class TicketService {
     @Transactional
     public TicketView editDetails(String email, long id, String subject, String description) {
         Profile actor = signedInAccount(email);
-        requireRole(actor, Role.REQUESTER);
+        if (!canSubmitTickets(actor)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Student or staff access required");
+        }
         // Assignment uses the same ticket lock, so the status cannot change during this check.
         Ticket ticket = requireVisible(tickets.findForUpdate(id).orElseThrow(TicketNotFoundException::new), actor);
         if (ticket.getStatus() != TicketStatus.NEW) {
@@ -110,7 +120,7 @@ public class TicketService {
     public TicketView updateStatus(String email, long id, TicketStatus next, String notes) {
         Profile actor = signedInAccount(email);
         Ticket ticket = requireVisible(tickets.findForUpdate(id).orElseThrow(TicketNotFoundException::new), actor);
-        if (actor.role() == Role.REQUESTER) {
+        if (canSubmitTickets(actor)) {
             checkRequesterStatus(ticket.getStatus(), next, notes);
         } else {
             requireRole(actor, Role.TECHNICIAN);
@@ -166,7 +176,7 @@ public class TicketService {
             List<Predicate> matches = new ArrayList<>();
 
             switch (actor.role()) {
-                case REQUESTER -> matches.add(criteria.equal(ticket.get("requesterId"), actor.userId()));
+                case STUDENT, STAFF -> matches.add(criteria.equal(ticket.get("requesterId"), actor.userId()));
                 case TECHNICIAN -> matches.add(criteria.equal(ticket.get("assignedTechnicianId"), actor.userId()));
                 case ADMINISTRATOR -> {}
             }
@@ -208,7 +218,7 @@ public class TicketService {
     /** Hides tickets outside a requester's own tickets or a technician's assignments. */
     private static Ticket requireVisible(Ticket ticket, Profile actor) {
         boolean visible = switch (actor.role()) {
-            case REQUESTER -> ticket.getRequesterId() == actor.userId();
+            case STUDENT, STAFF -> ticket.getRequesterId() == actor.userId();
             case TECHNICIAN -> Objects.equals(ticket.getAssignedTechnicianId(), actor.userId());
             case ADMINISTRATOR -> true;
         };
